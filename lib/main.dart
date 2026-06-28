@@ -29,6 +29,51 @@ class ArticleModel {
     }
     return Summary.fromJson(jsonDecode(response.body) as Map<String, Object?>);
   }
+
+  Future<List<Summary>> searchArticles(String query) async {
+    final headers = {
+      'User-Agent': 'WikipediaReader/1.0 (mksh2810/Wikipedia-Reader; support@example.com)'
+    };
+    final uri = Uri.https('en.wikipedia.org', '/w/api.php', {
+      'action': 'query',
+      'list': 'search',
+      'srsearch': query,
+      'format': 'json',
+      'srwhat': 'text',
+      'srlimit': '10',
+      'origin': '*',
+    });
+
+    final response = await get(uri, headers: headers);
+    if (response.statusCode != 200) {
+      throw HttpException('Failed to search articles.');
+    }
+
+    final json = jsonDecode(response.body);
+    final searchResults = (json['query']?['search'] as List<dynamic>?) ?? [];
+
+    List<Summary> summaries = [];
+    for (var result in searchResults) {
+      try {
+        final title = result['title'] as String;
+        final summaryUri = Uri.https(
+          'en.wikipedia.org',
+          '/api/rest_v1/page/summary/$title',
+        );
+        final summaryResponse = await get(summaryUri, headers: headers);
+        if (summaryResponse.statusCode == 200) {
+          summaries.add(
+            Summary.fromJson(
+              jsonDecode(summaryResponse.body) as Map<String, Object?>,
+            ),
+          );
+        }
+      } catch (e) {
+        print('Error fetching summary for result: $e');
+      }
+    }
+    return summaries;
+  }
 }
 
 class ArticleViewModel extends ChangeNotifier {
@@ -54,6 +99,36 @@ class ArticleViewModel extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+  List<Summary> searchResults = [];
+  bool isSearching = false;
+
+  Future<void> searchArticles(String query) async {
+    if (query.isEmpty) {
+      searchResults = [];
+      notifyListeners();
+      return;
+    }
+    
+    isSearching = true;
+    notifyListeners();
+    try {
+      searchResults = await model.searchArticles(query);
+      print('Search query: "$query", found ${searchResults.length} articles: ${searchResults.map((e) => e.titles.normalized).toList()}');
+      error = null;
+    } on HttpException catch (e) {
+      print('Error searching articles: ${e.message}');
+      error = e;
+      searchResults = [];
+    }
+    isSearching = false;
+    notifyListeners();
+  }
+
+  Future<void> selectArticle(Summary article) async {
+    summary = article;
+    searchResults = [];
+    notifyListeners();
+  }
 }
 
 class ArticleView extends StatefulWidget {
@@ -65,6 +140,7 @@ class ArticleView extends StatefulWidget {
 
 class _ArticleViewState extends State<ArticleView> {
   final ArticleViewModel viewModel = ArticleViewModel(ArticleModel());
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -73,10 +149,16 @@ class _ArticleViewState extends State<ArticleView> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80),
+        preferredSize: const Size.fromHeight(120),
         child: AppBar(
           backgroundColor: Colors.blue.shade200,
           elevation: 0,
@@ -110,6 +192,76 @@ class _ArticleViewState extends State<ArticleView> {
                       color: Colors.white,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      textAlignVertical: TextAlignVertical.center,
+                      onSubmitted: (query) {
+                        viewModel.searchArticles(query);
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search articles...',
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                        ),
+                        prefixIcon: IconButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          constraints: const BoxConstraints(),
+                          icon: Icon(Icons.search, color: Colors.grey.shade600),
+                          onPressed: () {
+                            viewModel.searchArticles(_searchController.text);
+                          },
+                        ),
+                        suffixIcon: ListenableBuilder(
+                          listenable: viewModel,
+                          builder: (context, _) {
+                            if (viewModel.isSearching) {
+                              return const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              );
+                            }
+                            return ListenableBuilder(
+                              listenable: _searchController,
+                              builder: (context, _) {
+                                if (_searchController.text.isNotEmpty) {
+                                  return IconButton(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    constraints: const BoxConstraints(),
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      viewModel.searchArticles('');
+                                    },
+                                  );
+                                }
+                                return const SizedBox.shrink();
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -119,18 +271,43 @@ class _ArticleViewState extends State<ArticleView> {
       body: ListenableBuilder(
         listenable: viewModel,
         builder: (context, _) {
+          // Show search results if any
+          if (viewModel.searchResults.isNotEmpty) {
+            return ListView.builder(
+              itemCount: viewModel.searchResults.length,
+              itemBuilder: (context, index) {
+                final article = viewModel.searchResults[index];
+                return ListTile(
+                  leading: article.thumbnail != null
+                      ? Image.network(article.thumbnail!.source)
+                      : Icon(Icons.article),
+                  title: Text(article.titles.normalized),
+                  subtitle: Text(
+                    article.description ?? article.extract,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () {
+                    viewModel.selectArticle(article);
+                  },
+                );
+              },
+            );
+          }
+
+          // Original state handling
           return switch ((
             viewModel.isLoading,
             viewModel.summary,
             viewModel.error,
           )) {
             (true, _, _) => const Center(child: CircularProgressIndicator()),
-            (_, _, final Exception e) => Text('Error: $e'),
+            (_, _, final Exception e) => Center(child: Text('Error: $e')),
             (_, final summary?, _) => ArticlePage(
               summary: summary,
               nextArticleCallback: viewModel.fetchArticle,
             ),
-            _ => const Text('Something went wrong!'),
+            _ => const Center(child: Text('Something went wrong!')),
           };
         },
       ),
