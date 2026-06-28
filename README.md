@@ -7,7 +7,7 @@
 
 ## About
 
-Wikipedia Reader is a beautiful Flutter application that lets users explore random Wikipedia articles with a modern, intuitive interface. Perfect for discovering interesting topics and expanding your knowledge!
+Wikipedia Reader is a beautiful Flutter application that lets users explore random Wikipedia articles with a modern, intuitive interface. Perfect for discovering interesting topics and expanding your knowledge! It is a slight improvement of the wikipedia-reader in flutter tutorial.
 
 ## Features
 
