@@ -15,7 +15,6 @@ Wikipedia Reader is a beautiful Flutter application that lets users explore rand
 
 - 🔀 **Random Article Discovery** - Tap a button to get a random Wikipedia article
 - 🎨 **Modern UI** - Clean, gradient-based design with smooth animations
-- 🔍 **Search Functionality** - Search for specific articles (expandable feature)
 - 📱 **Cross-Platform** - Works on Android, iOS, Web, Windows, macOS, and Linux
 - ⚡ **Fast Loading** - Efficient API integration with Wikipedia
 - 🌐 **Real-Time Data** - Fetches live data from Wikipedia's REST API
@@ -186,7 +185,6 @@ Response: JSON with article metadata
 1. **Launch the app** - It automatically loads a random Wikipedia article on startup
 2. **View Article** - See the article title, description, and thumbnail image
 3. **Load Next Article** - Tap the "Next" button to fetch another random article
-4. **Search** (Upcoming) - Use the search bar to find specific articles
 
 ### Code Example
 
@@ -248,31 +246,6 @@ The project follows Flutter and Dart best practices:
 - Keep functions focused and small
 - Add comments for complex logic
 
-## Future Enhancements
-
-📋 **Planned Features:**
-
-- [ ] Search functionality for specific articles
-- [ ] Favorites/bookmarks system
-- [ ] Article history/cache for offline viewing
-- [ ] Share articles feature
-- [ ] Dark mode support
-- [ ] Multiple language support
-- [ ] Article recommendations based on reading history
-- [ ] Night mode/reading mode
-
-## Contributing
-
-We welcome contributions! To contribute:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-Please ensure your code follows the project's style guidelines and includes appropriate tests.
-
 ## Performance
 
 - **App Size**: Minimal dependencies for smaller app size
@@ -294,10 +267,6 @@ Please ensure your code follows the project's style guidelines and includes appr
 - Solution: Run `flutter clean` and then `flutter pub get`
 - Solution: Update Flutter SDK: `flutter upgrade`
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
 ## Acknowledgments
 
 - 🌍 Wikipedia and the Wikimedia Foundation
@@ -313,5 +282,3 @@ For issues, questions, or suggestions:
 ---
 
 **Happy Reading! 📖**
-
-Made with ❤️ using Flutter
