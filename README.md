@@ -14,10 +14,11 @@ Wikipedia Reader is a beautiful Flutter application that lets users explore rand
 ✨ **Key Features:**
 
 - 🔀 **Random Article Discovery** - Tap a button to get a random Wikipedia article
-- 🎨 **Modern UI** - Clean, gradient-based design with smooth animations
+- 🔍 **Live Search** - Search for any topic and view matching Wikipedia articles with descriptions and thumbnails
+- 🎨 **Modern UI** - Clean, gradient-based design with smooth animations and interactive search controls
 - 📱 **Cross-Platform** - Works on Android, iOS, Web, Windows, macOS, and Linux
 - ⚡ **Fast Loading** - Efficient API integration with Wikipedia
-- 🌐 **Real-Time Data** - Fetches live data from Wikipedia's REST API
+- 🌐 **Real-Time Data** - Fetches live data from Wikipedia's Action and REST APIs
 
 ## Getting Started
 
@@ -148,13 +149,23 @@ Success? → Display ArticlePage with content
 
 ## API Integration
 
-The app integrates with **Wikipedia's REST API**:
+The app integrates with Wikipedia APIs:
 
+### 1. Wikipedia REST API (Random & Summaries)
 ```
 Endpoint: https://en.wikipedia.org/api/rest_v1/page/random/summary
+Endpoint: https://en.wikipedia.org/api/rest_v1/page/summary/{title}
 Method: GET
-Response: JSON with article metadata
+Response: JSON with article metadata (title, extract, description, images)
 ```
+
+### 2. Wikipedia Action API (Search)
+```
+Endpoint: https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={query}&origin=*
+Method: GET
+Response: JSON containing a list of search result articles
+```
+*Note: The Action API request uses `origin=*` to enable cross-origin requests (CORS) when running on web platforms.*
 
 ### Response Structure
 
