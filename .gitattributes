@@ -1,0 +1,9 @@
+# Exclude auto-generated platform build setups and runners from language metrics
+windows/* linguist-vendored
+linux/* linguist-vendored
+macos/* linguist-vendored
+ios/* linguist-vendored
+web/* linguist-vendored
+
+# Treat assets folder strictly as static data/resources
+assets/* linguist-vendored
